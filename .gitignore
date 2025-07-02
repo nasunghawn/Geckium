@@ -11,3 +11,4 @@ thumbs.db
 !userChrome.css
 !userChrome.au.css
 !userContent.css
+*.scss
