@@ -1,15 +1,16 @@
 :root {
-	&[contentmode="wizard"] {
-		.disable-in-wizard {
-			pointer-events: none;
-			opacity: .5;
+	&[contentmode="wizard"] .disable-in-wizard,
+	[disabled="true"] {
+		pointer-events: none;
+		opacity: .5;
 
-			&#global-appearance-container {
-				max-height: 100px;
-				mask-image: linear-gradient(to bottom, black, transparent);
-			}
+		.appearance-container {
+			max-height: 100px;
+			mask-image: linear-gradient(to bottom, black, transparent);
 		}
+	}
 
+	&[contentmode="wizard"] {
 		.show-in-wizard {
 			display: flex;
 		}
@@ -56,15 +57,32 @@
 	[data-browser="msedge"] .theme-icons .theme-browser-icon {
 		background-image: url("chrome://userchrome/content/windows/gsettings/imgs/browsers/msedge.svg")
 	}
+
+	&[is120Plus="true"] .is-below-120 {
+		display: none !important;
+	}
+
+	&[nav-drawer-auto-hide] {
+		@media all and (max-width: 640px) {
+			.banner image {
+				width: 148px;
+			}
+		}
+	}
+}
+
+.is-linux-only {
+	display: none !important;
+}
+@media (-moz-platform: linux) {
+	.is-linux-only {
+		display: flex !important;
+	}
 }
 
 #window {
 	width: 1160px;
 	height: 710px;
-}
-
-.content:not([data-page-container]) {
-	padding: var(--inner-padding);
 }
 
 h4 .about-flag {
@@ -76,7 +94,7 @@ h4 .about-flag {
 	margin-inline-start: 4px;
 	cursor: pointer;
 	transition: all 150ms ease-in;
-	border-radius: 9999px;
+	border-radius: 50%;
 	overflow: hidden;
 	
 	&::before {
@@ -95,6 +113,22 @@ h4 .about-flag {
 
 	.ripple {
 		background: rgb(0, 0, 0, 20%);
+	}
+}
+
+#overridevisualstyle,
+#ncphelper-maskwidthmode[NCPMaskWidthMode="custom"],
+#gkThemeFilterItem,
+#card-avatar > .item:nth-child(2) {
+	border-bottom: 0 !important;
+}
+
+#ncphelper-maskwidthmode {
+	&[NCPMaskWidthMode="custom"] ~ #ncphelper-custommaskwidth {
+		display: flex;
+	}
+	&:not([NCPMaskWidthMode="custom"]) ~ #ncphelper-custommaskwidth {
+		display: none;
 	}
 }
 
@@ -171,7 +205,8 @@ h4 .about-flag {
 	gap: 32px;
 	
 	image {
-		transition: fill 320ms;
+		width: 200px;
+		transition: fill 320ms, width 200ms;
 
 		&:hover {
 			fill: #209f43;
@@ -191,11 +226,6 @@ h4 .about-flag {
 	margin-inline-start: 0 !important;
 }
 
-#profile-pic-content[profile-pic-button="false"] {
-	pointer-events: none;
-	opacity: 0.5;
-}
-
 .profile-mode-option {
 	display: none;
 }
@@ -207,13 +237,13 @@ h4 .about-flag {
 		padding-block-end: 19px;
 	}
 
-	> .item:nth-child(2) {
+	> .item:nth-child(3) {
 		display: none;
 	}
 
 
 	&[profile-pic-mode="chromium"] {
-		> .item:nth-child(2) {
+		> .item:nth-child(3) {
 			display: flex;
 		}
 
@@ -222,16 +252,8 @@ h4 .about-flag {
 		}
 	}
 
-	&[profile-pic-mode="none"],
-	&[profile-pic-mode="geckium"],
-	&[profile-pic-mode="firefox"] {
-		> .item:nth-child(1) {
-			border-bottom: 0;
-		}
-	}
-
 	&[profile-pic-mode="custom"] {
-		> .item:nth-child(2) {
+		> .item:nth-child(3) {
 			display: flex;
 		}
 
@@ -273,6 +295,7 @@ h4 .about-flag {
 	}
 
 	label {
+		display: flex;
 		margin-inline-start: 8px;
 	}
 }
@@ -599,8 +622,13 @@ h4 .about-flag {
 }
 
 .icon-picker {
+	position: relative;
 	height: fit-content;
 	align-items: center;
+
+	label:not([data-icon]) + .action-item.icon-delete {
+		display: none;
+	}
 
 	.button {
 		min-width: 0;
@@ -627,6 +655,16 @@ h4 .about-flag {
 		width: 128px;
 		height: 128px;
 	}
+
+	.action-item {
+		position: absolute;
+		top: 6px;
+		right: 3px;
+
+		&.icon-delete::before {
+			background-color: hsl(0, 0, 60%);
+		}
+	}
 }
 
 #app-name::before {
@@ -635,15 +673,13 @@ h4 .about-flag {
 
 .modal[data-modal="editApp_modal"] {
 	&[data-app="null"] {
-		#deleteBtn,
-		#OKBtn {
+		#app_deleteBtn,
+		#app_OKBtn {
 			display: none;
 		}
 	}
-	&:not([data-app="null"]) {
-		#createBtn {
-			display: none;
-		}
+	&:not([data-app="null"]) #createBtn {
+		display: none;
 	}
 }
 
@@ -777,6 +813,9 @@ h4 .about-flag {
 	display: none !important;
 }
 :root:not([isWindows10]) .win10 {
+	display: none !important;
+}
+:root:not([nativeControls]) .nativecontrols {
 	display: none !important;
 }
 .linuxonly {

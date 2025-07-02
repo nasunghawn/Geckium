@@ -1,6 +1,7 @@
 & {
 	//Give the tabs/Incognito/pfp the appropriate offset
 	#private-browsing-indicator-with-label,
+	.private-browsing-indicator-with-label /* Fix for Firefox 133+ */,
     #gkavatar-container {
 		order: -1 !important; // Force to left
 	}
@@ -16,7 +17,8 @@
 	}
 	// Incognito can't use this^ spacing, so we need to set it separately for Incognito
 	&[privatebrowsingmode="temporary"] {
-		#private-browsing-indicator-with-label {
+		#private-browsing-indicator-with-label,
+		.private-browsing-indicator-with-label /* Fix for Firefox 133+ */ {
 			margin-inline-start: var(--tab-distance-from-toolbar-edge);
 		}
 	}
@@ -46,13 +48,11 @@
 			color: black !important;
 			border-radius: 4px !important;
 		}
-		#main-menubar {
-			& > menu {
-				text-shadow: 0 1px 4px rgba(255, 255, 255, 0.8) !important;
-				@media not (-moz-platform: linux) {
-					-moz-default-appearance: menuitem;
-					appearance: menuitem !important;
-				}
+		#main-menubar > menu {
+			text-shadow: 0 1px 4px rgba(255, 255, 255, 0.8) !important;
+			@media not (-moz-platform: linux) {
+				-moz-default-appearance: menuitem;
+				appearance: menuitem !important;
 			}
 		}
 	}
@@ -60,15 +60,32 @@
 	&[gktitnative="false"] {
 		//Unless the Linux Pre-Alpha flag is enabled, always use the white Google logo in non-native titlebars
 		&[gkbranding="chrome"]:not([geckium-chrflag-linux-pre-alpha-titlebar="true"]) {
-			.titlebar-buttonbox-container::before {
-				content: url("chrome://userchrome/content/assets/img/chrome-1/titlebar/windows/google-alternate.png");
-				margin-block-start: 3px;
-				margin-inline-end: 7px;
-			}
-			&[sizemode="maximized"],
-			&[sizemode="fullscreen"] {
+			&[privatebrowsingmode="temporary"],
+			&:not([gkpeoplestyle="titlebutton"]) {
 				.titlebar-buttonbox-container::before {
-					content: unset !important;
+					content: url("chrome://userchrome/content/assets/img/chrome-1/titlebar/windows/google-alternate.png");
+					margin-block-start: 3px;
+					margin-inline-end: 7px;
+				}
+				&[sizemode="maximized"],
+				&[sizemode="fullscreen"] {
+					.titlebar-buttonbox-container::before {
+						content: unset !important;
+					}
+				}
+			}
+			&:not([privatebrowsingmode="temporary"]),
+			&[gkpeoplestyle="titlebutton"] {
+				#gkpeople-button-container::before {
+					content: url("chrome://userchrome/content/assets/img/chrome-1/titlebar/windows/google-alternate.png");
+					margin-block-start: 3px;
+					margin-inline-end: 7px;
+				}
+				&[sizemode="maximized"],
+				&[sizemode="fullscreen"] {
+					#gkpeople-button-container::before {
+						content: unset !important;
+					}
 				}
 			}
 		}
@@ -82,6 +99,12 @@
 			order: 1000 !important;
 			align-items: unset !important;
 			margin-inline-end: var(--titlebar-border-radius); // right margin
+		}
+		//Windows quirk: See Geckium_titlebar.uc.js: getTitleBordersRemovable for more information
+		@media (-moz-platform: windows) {
+			.titlebar-buttonbox-container {
+				margin-inline-end: 4px !important;
+			}
 		}
 		//Linux quirk: Counteract exclusive menubar padding
 		@media (-moz-platform: linux) {

@@ -8,7 +8,7 @@ UC_API.Runtime.startupFinished().then(async () => {
 	// Modify currently existing tabs
 	document.querySelectorAll(`.tabbrowser-tab:not([gkmodified="true"])`).forEach(existingTab => {
 		modifyTab(existingTab);
-	});		
+	});
 
 	/* bruni:	The entire code should be ran after startup has finished, meaning that
 				gBrowser is available, however, in Floorp, when creating a new window
@@ -45,7 +45,7 @@ function modifyTab(tab) {
 
 			if (appearanceChoice <= 11)
 				minWidth = 31;
-			else if (appearanceChoice <= 47)
+			else if (appearanceChoice <= 37)
 				minWidth = 27;
 			else if (appearanceChoice <= 58)
 				minWidth = 31;
@@ -113,32 +113,48 @@ function modifyTab(tab) {
 	// Tab Mute
 	let tabMuteButtonElm = document.createElement("div");
 	tabMuteButtonElm.classList.add("tab-mute-button");
+	tabMuteButtonElm.appendChild(document.createXULElement("image"));
 	gkInsertElm.before(tabMuteButtonElm, tabCloseButtonElm);
 	tabMuteButtonElm.addEventListener("click", () => {
 		tab.toggleMuteAudio()
 	});
+
+	// Tab Sharing
+	let tabSharingElm = document.createElement("div");
+	tabSharingElm.classList.add("tab-sharing-icon-overlay");
+	tabSharingElm.appendChild(document.createXULElement("image"));
+	gkInsertElm.before(tabSharingElm, tabMuteButtonElm);
 }
 
 (function() {
-	const onUnderflow = window.customElements.get('arrowscrollbox').prototype.on_underflow;
-	window.customElements.get('arrowscrollbox').prototype.on_underflow = function(e) {
-		if (this.id === "tabbrowser-arrowscrollbox") {
+	const customElm = versionFlags.is136Plus ? 
+			window.customElements.get('tabbrowser-tabs').prototype :
+			window.customElements.get('arrowscrollbox').prototype;
+	const reqID = versionFlags.is136Plus ? 
+			"tabbrowser-tabs" :
+			"tabbrowser-arrowscrollbox";
+
+	const onUnderflow = customElm.on_underflow;
+	customElm.on_underflow = function(e) {
+		if (this.id === reqID) {
 			e.preventDefault();
 			return;
 		}
 		onUnderflow.call(this, e);
 	};
 
-	const onOverflow = window.customElements.get('arrowscrollbox').prototype.on_overflow;
-	window.customElements.get('arrowscrollbox').prototype.on_overflow = function(e) {
-		if (this.id === "tabbrowser-arrowscrollbox") {
+	const onOverflow = customElm.on_overflow;
+	customElm.on_overflow = function(e) {
+		if (this.id === reqID) {
 			e.preventDefault();
 			return;
 		}
 		onOverflow.call(this, e);
 	};
 
-	window.customElements.get('tabbrowser-tabs').prototype._initializeArrowScrollbox = function() {
-		return;
-	};
+	if (!versionFlags.is136Plus) { // Removed from tabs.js since 128.
+		window.customElements.get('tabbrowser-tabs').prototype._initializeArrowScrollbox = function() {
+			return;
+		};
+	}
 })();

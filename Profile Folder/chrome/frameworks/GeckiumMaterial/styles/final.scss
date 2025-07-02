@@ -25,6 +25,13 @@
 :root {
 	--inner-padding: 16px;
 
+	@media all and (max-width: 640px) {
+		&[nav-drawer-auto-hide] .list-container > h4 {
+			padding-inline-start: 19px;
+			margin-block-end: -10px;
+		}
+	}
+
 	&,
 	body {
 		font-size: 10pt;
@@ -123,6 +130,7 @@ h4 {
 
 spacer {
 	flex: 1;
+	min-width: 18px;
 }
 
 .show-mac {
@@ -157,3 +165,5 @@ spacer {
 @import "partials/preview";
 @import "partials/snackbars";
 @import "partials/ripple";
+@import "partials/spinner";
+@import "partials/table";

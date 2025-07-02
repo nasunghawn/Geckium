@@ -1,7 +1,8 @@
 
 :root {
 	// Make the Incognito indicator look like Chromium's
-	#private-browsing-indicator-with-label {
+	#private-browsing-indicator-with-label,
+	.private-browsing-indicator-with-label /* Fix for Firefox 133+ */ {
 		margin-inline: unset !important;
 		//#TabsToolbar-customization-target aligns items to end,
 		// so we have to mimic it for Incognito to be consistent.
@@ -17,7 +18,8 @@
 		display: none !important;
 	}
 	#gkavatar-container > #gk-firefox-account-button,
-	#private-browsing-indicator-with-label {
+	#private-browsing-indicator-with-label,
+	.private-browsing-indicator-with-label /* Fix for Firefox 133+ */ {
 		background: transparent !important;
 		border: 0 !important;
 		padding: 0 !important;
@@ -31,17 +33,26 @@
 	}
 	// NOTE: Maximised state is handled by titlebar border styles.
 
+	&[gkpeoplestyle="off"] {
+		#gkavatar-container,
+		#gkpeople-button-container,
+		#gk-firefox-account-button {
+			display: none !important;
+		}
+	}
+
 
 	/*
 		Avatar besides Tabs
 	*/
 	&:not([fxastatus="signedin"])[profilepic="firefox"],
-	&[privatebrowsingmode="temporary"] { // Hide the account icon if in OffTheRecord or if set to Firefox Account but not signed in yet
+	&[privatebrowsingmode="temporary"],
+	&:not([gkpeoplestyle="avatar"]) { // Hide the account icon if in OffTheRecord, not in use, or if set to Firefox Account but not signed in yet
 		#gkavatar-container {
 			display: none !important;
 		}
     }
-	&[profilepicbutton="true"]:not([profilepic="none"]) {
+	&[gkpeoplestyle="avatar"] {
 		#gk-firefox-account-button #fxa-avatar-image {
 			width: 38px !important;
 			height: 32px !important;
@@ -113,9 +124,17 @@
     /*
 		People Titlebar Button
 	*/
-    #gkpeople-button-container {
-        appearance: none !important; // bruni: We disable the `.titlebar-buttonbox` apperance so it doesn't mask the People button.
-    }
+	#gkpeople-button {
+		appearance: none !important; // bruni: We disable the `.titlebar-buttonbox` apperance so it doesn't mask the People button.
+		display: flex !important;
+	}
+	#toolbar-menubar[autohide="true"]:not([inactive]) ~ #TabsToolbar,
+	&[privatebrowsingmode="temporary"],
+	&:not([gkpeoplestyle="titlebutton"]) {
+		#gkpeople-button-container {
+			display: none !important;
+		}
+	}
     #gk-firefox-account-button {
         padding: 0 !important;
     }
@@ -123,9 +142,12 @@
         appearance: none !important;
 		list-style-image: url("chrome://userchrome/content/assets/img/chrome-1/titlebar/sign_in_button_avatar.svg");
     }
+	.titlebar-buttonbox #gk-firefox-account-button .toolbarbutton-badge-stack #fxa-avatar-image {
+		display: none;
+	}
     
-    // Show text when signed in
-	&[fxastatus="signedin"] .gkpeople-titlebar {
+    // Show text when signed in and privacy setting disabled
+	&[fxastatus="signedin"]:not([hideAccountInfo="true"]) .gkpeople-titlebar {
 		.toolbarbutton-icon {
 			display: none !important;
 		}

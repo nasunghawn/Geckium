@@ -4,8 +4,6 @@
 // @loadorder   4
 // ==/UserScript==
 
-
-
 class gkPeople {
 	static get getPeopleButton() {
 		return document.getElementById("gk-firefox-account-button");
@@ -20,14 +18,17 @@ class gkPeople {
 
 		const titlebarButtonboxContainer = document.querySelector("#TabsToolbar .titlebar-buttonbox-container");
 		const titlebarButtonboxSpace = document.createXULElement("hbox");
-		titlebarButtonboxSpace.classList.add("titlebar-buttonbox");
 		titlebarButtonboxSpace.id = "gkpeople-button-container";
+		const titlebarButton = document.createXULElement("hbox");
+		titlebarButton.id = "gkpeople-button";
+		titlebarButton.classList.add("titlebar-buttonbox");
 		TabsToolbarCustomizationTarget.append(titlebarButtonboxSpace);
+		titlebarButtonboxSpace.appendChild(titlebarButton);
 		gkInsertElm.before(titlebarButtonboxSpace, titlebarButtonboxContainer);
 	}
 
 	static get getReservedSpaces() {
-		return [document.getElementById("gkavatar-container"), document.getElementById("gkpeople-button-container")];
+		return [document.getElementById("gkavatar-container"), document.querySelector("#gkpeople-button-container > #gkpeople-button")];
 	}
 
 	/**
@@ -68,23 +69,17 @@ class gkPeople {
 		}
 		// Delete existing profile button style values (they will get remade)
 		this.getPeopleButton.removeAttribute("class");
-		this.getReservedSpaces[0].style.display = "none";
-		this.getReservedSpaces[1].style.display = "none";
 
 		let prefChoice = gkPeople.getStyle(era);
+		document.documentElement.setAttribute("gkpeoplestyle", prefChoice);
+
 		if (prefChoice == "off") {
 			// We're done here if it is disabled.
 			return;
 		} else if (prefChoice == "avatar") {
-			this.getReservedSpaces[0].style.display = null;
-
-			// Actual Button
 			this.getReservedSpaces[0].appendChild(this.getPeopleButton);
 			this.getPeopleButton.classList.add("toolbarbutton-1", "chromeclass-toolbar-additional");
 		} else if (prefChoice == "titlebutton") {
-			this.getReservedSpaces[1].style.display = null;
-
-			// Actual Button
 			this.getReservedSpaces[1].appendChild(this.getPeopleButton);
 			this.getPeopleButton.classList.add("gkpeople-titlebar");
 		}
@@ -96,7 +91,6 @@ class gkPeople {
 		document.documentElement.style.removeProperty("--custom-profile-picture");
 
 		const prefChoice = gkPrefUtils.tryGet("Geckium.profilepic.mode").string;
-		document.documentElement.setAttribute("profilepicbutton", gkPrefUtils.tryGet("Geckium.profilepic.button").bool) //TODO: Was header switch
 		document.documentElement.setAttribute("profilepic", prefChoice);
 		switch (prefChoice) {
 			case "firefox":
@@ -159,9 +153,8 @@ Services.prefs.addObserver("Geckium.profilepic.customPath", profilePictureObs, f
 // Automatically change the Linux People Titlebutton style when 68-forcing's toggled
 const force68LinuxPeopleObs = {
 	observe: function (subject, topic, data) {
-		if (topic == "nsPref:changed") {
+		if (topic == "nsPref:changed")
 			gkPeople.applyForce68Linux();
-		}
 	},
 };
 Services.prefs.addObserver("Geckium.people.force68Linux", force68LinuxPeopleObs, false);
@@ -169,9 +162,8 @@ Services.prefs.addObserver("Geckium.people.force68Linux", force68LinuxPeopleObs,
 // Automatically change the Chromium OS People Titlebutton visibility when toggled
 const forceChrOSPeopleObs = {
 	observe: function (subject, topic, data) {
-		if (topic == "nsPref:changed") {
+		if (topic == "nsPref:changed")
 			gkPeople.applyForceChrOS();
-		}
 	},
 };
 Services.prefs.addObserver("Geckium.people.showChrOSPeople", forceChrOSPeopleObs, false);

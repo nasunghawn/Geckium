@@ -38,10 +38,8 @@
 		height: 16px;
 	}
 
-	&:not([geckium-one]) {
-		* {
-			visibility: hidden;
-		}
+	&:not([geckium-one]) body > * {
+		visibility: hidden;
 	}
 
 	&[geckium-one] {
@@ -84,11 +82,15 @@
 		@import "partials/chrome-25/final";
 	}
 
+	&[geckium-thirtyseven] {
+		@import "partials/chrome-37/final";
+	}
+
 	&[geckium-fortyseven] {
 		@import "partials/chrome-47/final";
 	}
 
-	&[geckium-sixtyeight] {
+	/*&[geckium-sixtyeight] {
 		@import "partials/chrome-68/final";
-	}
+	}*/
 }

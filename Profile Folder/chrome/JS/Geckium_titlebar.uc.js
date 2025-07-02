@@ -9,8 +9,62 @@
 
 // Initial variables
 let previousTabY;
+let previousDPI;
+let tbordersRemovable;
 
 class gkTitlebars {
+	/**
+	 * getTitleBordersRemovable - Fills in tbordersRemoable if not filled and returns its value
+	 * 
+	 * NOTE: Called by applyTitlebar and applyPopupTitlebar ONLY if Compact Borders are being applied (skipped if native titlebars are applied)
+	 * 
+	 * In Windows on Firefox 135+, Mozilla butchered all themes that require border removal by removing "chromemargin", so we need to check
+	 * that "chromemargin" is available, so that if not square Silverfox-style Compact Borders are used instead.
+	 */
+
+	static getTitleBordersRemovable() {
+		if (tbordersRemovable == null) {
+			// If not Windows, return True as the borders don't exist outside Windows
+			if (AppConstants.platform != "win") {
+				tbordersRemovable = true;
+			// If Windows, return False if "chromemargin" doesn't exist
+			} else if (!document.documentElement.getAttribute("chromemargin")) {
+				tbordersRemovable = false;
+				document.documentElement.setAttribute("gkcompactsquared", "true");
+
+				// Show a warning if not yet triggered
+				if (gkPrefUtils.tryGet("Geckium.appearance.squareCompactWarnDismissed").bool != true) {
+					UC_API.Notifications.show({
+						label : "Mozilla Firefox on Windows no longer supports Compact Borders, making titlebars inaccurate.",
+						type : "geckium-notification",
+						priority: "critical",
+						buttons: [{
+							label: "Learn more",
+							callback: (notification) => {
+								notification.ownerGlobal.openWebLinkIn(
+								"https://github.com/angelbruni/Geckium/wiki/Compact-Borders-are-no-longer-supported-on-Windows",
+								"tab"
+								);
+								return false
+							}
+						},
+						{
+							label: "Don't show again",
+							callback: (notification) => {
+								gkPrefUtils.set("Geckium.appearance.squareCompactWarnDismissed").bool(true);
+								return false
+							}
+						}]
+					})
+				}
+			} else {
+				tbordersRemovable = true;
+			}
+		}
+		return tbordersRemovable;
+	}
+
+
 	// Titlebar style information
 	static titlebars = {
 		/**
@@ -65,7 +119,7 @@ class gkTitlebars {
 					macos: "classic"
 				}
 			},
-			47: {
+			37: {
 				menunative: 2
 			}
 		},
@@ -86,7 +140,7 @@ class gkTitlebars {
 					macos: "classic"
 				}
 			},
-			47: {
+			37: {
 				menunative: 2
 			}
 		},
@@ -107,7 +161,7 @@ class gkTitlebars {
 					macos: "classic"
 				}
 			},
-			47: {
+			37: {
 				menunative: 2
 			}
 		},
@@ -129,7 +183,7 @@ class gkTitlebars {
 					macos: "classic"
 				}
 			},
-			47: {
+			37: {
 				menunative: 2
 			},
 			68: {
@@ -161,7 +215,7 @@ class gkTitlebars {
 					macos: "macosx"
 				}
 			},
-			47: {
+			37: {
 				systheme: {
 					linux: "gtk",
 					win: "classic",
@@ -196,7 +250,7 @@ class gkTitlebars {
 					macos: "macosx"
 				}
 			},
-			47: {
+			37: {
 				systheme: {
 					linux: "gtk",
 					win: "classic",
@@ -482,17 +536,21 @@ class gkTitlebars {
 			// Base Geckium CSS flag
 			document.documentElement.setAttribute("gktitnative", "true");
 			// chromemargin (border type)
-			document.documentElement.setAttribute("chromemargin", "0,2,2,2");
+			if (document.documentElement.getAttribute("chromemargin")) {
+				document.documentElement.setAttribute("chromemargin", "0,2,2,2");
+			}
 			// Gaps
 			document.documentElement.setAttribute("gkhasgaps", spec.hasnativegaps ? "true" : "false");
 		} else {
 			document.documentElement.setAttribute("gktitnative", "false");
-			if (Object.keys(spec).includes("chromemargin")) { // Special case for Windows 10 style
-				document.documentElement.setAttribute("chromemargin", spec.chromemargin);
-			} else {
-				setTimeout(() => {
-					document.documentElement.setAttribute("chromemargin", "0,0,0,0");
-				}, 0);
+			if (gkTitlebars.getTitleBordersRemovable()) {
+				if (Object.keys(spec).includes("chromemargin")) { // Special case for Windows 10 style
+					document.documentElement.setAttribute("chromemargin", spec.chromemargin);
+				} else {
+					setTimeout(() => {
+						document.documentElement.setAttribute("chromemargin", "0,0,0,0");
+					}, 0);
+				}
 			}
 			document.documentElement.setAttribute("gkhasgaps", spec.hasgaps ? "true" : "false");
 		}
@@ -526,12 +584,14 @@ class gkTitlebars {
 			document.documentElement.setAttribute("gkhasgaps", "false");
 		} else {
 			document.documentElement.setAttribute("gktitnative", "false");
-			if (Object.keys(spec).includes("chromemargin")) { // Special case for Windows 10 style
-				document.documentElement.setAttribute("chromemargin", spec.chromemargin);
-			} else {
-				setTimeout(() => {
-					document.documentElement.setAttribute("chromemargin", "0,0,0,0");
-				}, 0);
+			if (gkTitlebars.getTitleBordersRemovable()) {
+				if (Object.keys(spec).includes("chromemargin")) { // Special case for Windows 10 style
+					document.documentElement.setAttribute("chromemargin", spec.chromemargin);
+				} else {
+					setTimeout(() => {
+						document.documentElement.setAttribute("chromemargin", "0,0,0,0");
+					}, 0);
+				}
 			}
 			document.documentElement.setAttribute("gkhasgaps", spec.hasgaps ? "true" : "false");
 		}
@@ -591,7 +651,11 @@ class gkTitlebars {
 			return;
 		}
 		gkTitlebars.tabscrollbox = document.getElementById("tabbrowser-arrowscrollbox");
-		new ResizeObserver(gkTitlebars.adjustTabY).observe(document.getElementById("titlebar"));
+		try {
+			new ResizeObserver(gkTitlebars.adjustTabY).observe(document.getElementById("titlebar"));
+		} catch { // Later Firefox releases deleted #titlebar
+			new ResizeObserver(gkTitlebars.adjustTabY).observe(document.getElementById("navigator-toolbox"));
+		}
 	}
 
 	/**
@@ -613,9 +677,8 @@ window.addEventListener("load", gkTitlebars.enableSizeEvents);
 // Automatically change the titlebar when the setting changes
 const titObserver = {
 	observe: function (subject, topic, data) {
-		if (topic == "nsPref:changed") {
+		if (topic == "nsPref:changed")
 			gkTitlebars.applyTitlebar();
-		}
 	},
 };
 Services.prefs.addObserver("Geckium.appearance.choice", titObserver, false);
@@ -630,9 +693,8 @@ Services.prefs.addObserver("Geckium.chrTheme.mustAero", titObserver, false);
 // Automatically change the macOS/Mac OS X titlebutton style when Graphite's toggled
 const graphiteObserver = {
 	observe: function (subject, topic, data) {
-		if (topic == "nsPref:changed") {
+		if (topic == "nsPref:changed")
 			gkTitlebars.applyGraphite();
-		}
 	},
 };
 window.addEventListener("load", gkTitlebars.applyGraphite);
@@ -640,3 +702,144 @@ Services.prefs.addObserver("Geckium.appearance.macIsGraphite", graphiteObserver,
 
 // Add div for titlebar border shadow
 window.addEventListener("load", gkTitlebars.addShadowDiv);
+
+function NCPHelper() {
+	if (isNCPatched) {
+		const standardizedDPI = getStandardizedDPI();
+
+		let helperMaskWidthProperty = "--helper-mask-width";
+		let helperMaskWidth = gkPrefUtils.tryGet("Geckium.NCPHelper.maskWidthMode").string;
+		let maskWidth;
+
+		// We have to do the DPI stuff manually ;-;
+		if (helperMaskWidth == "winvista") {
+			switch (standardizedDPI) {
+				case 96:
+					maskWidth = 92
+					break;
+				case 120:
+					maskWidth = 94.4
+					break;
+				case 144:
+					maskWidth = 94.6667
+					break;
+				case 168:
+					maskWidth = 91.2333
+					break;
+				case 192:
+					maskWidth = 93.5
+					break;
+				case 216:
+					maskWidth = 95.85000610351562
+					break;
+				case 240:
+					maskWidth = 94.80000305175781
+					break;
+				case 288:
+					maskWidth = 94
+					break;
+				case 384:
+					maskWidth = 94.25
+					break;
+				case 480:
+					maskWidth = 94.40000915527344
+					break;
+			}
+		} else if (helperMaskWidth == "win7") {
+			switch (standardizedDPI) {
+				case 96:
+					maskWidth = 102
+					break;
+				case 120:
+					maskWidth = 101.6
+					break;
+				case 144:
+					maskWidth = 104.667
+					break;
+				case 168:
+					maskWidth = 103.133
+					break;
+				case 192:
+					maskWidth = 103.5
+					break;
+				case 216:
+					maskWidth = 104.4
+					break;
+				case 240:
+					maskWidth = 104.8
+					break;
+				case 288:
+					maskWidth = 104
+					break;
+				case 384:
+					maskWidth = 104.25
+					break;
+				case 480:
+					maskWidth = 104.4
+					break;
+			}
+		} else if ((helperMaskWidth == "auto" && window.matchMedia("(-moz-platform: windows-win8)").matches) || (helperMaskWidth == "win8")) {
+			switch (standardizedDPI) {
+				case 96:
+					maskWidth = 98
+					break;
+				case 120:
+					maskWidth = 100
+					break;
+				case 144:
+					maskWidth = 99.5
+					break;
+				case 168:
+					maskWidth = 98
+					break;
+				case 192:
+					maskWidth = 99
+					break;
+				case 216:
+					maskWidth = 102
+					break;
+				case 240:
+					maskWidth = 100
+					break;
+				case 288:
+					maskWidth = 99
+					break;
+				case 384:
+					maskWidth = 99
+					break;
+				case 480:
+					maskWidth = 102
+					break;
+			}
+		} else if (helperMaskWidth == "custom") {
+			maskWidth = parseInt(gkPrefUtils.tryGet("Geckium.NCPHelper.customMaskWidth").string);
+		}
+
+		if ((helperMaskWidth !== "auto") || (helperMaskWidth == "auto" && window.matchMedia("(-moz-platform: windows-win8)").matches))
+			document.documentElement.style.setProperty(helperMaskWidthProperty, `${maskWidth}px`);
+		else
+			document.documentElement.style.removeProperty(helperMaskWidthProperty);
+	}
+}
+
+window.addEventListener("load", () => {
+	NCPHelper();
+})
+
+// There's no good way to verify for DPI change, so we will have to rely on the window `resize` event :/
+window.addEventListener("resize", () => {
+	// Only run on `resize` if there's a DPI change
+	previousDPI = getStandardizedDPI();
+	if (previousDPI !== getStandardizedDPI())
+		NCPHelper();
+});
+
+// Automatically choose the best mask sizes depending on DPI
+const NCPHelperObserver = {
+	observe: function (subject, topic, data) {
+		if (topic == "nsPref:changed")
+			NCPHelper();
+	},
+};
+Services.prefs.addObserver("Geckium.NCPHelper.maskWidthMode", NCPHelperObserver, false);
+Services.prefs.addObserver("Geckium.NCPHelper.customMaskWidth", NCPHelperObserver, false);

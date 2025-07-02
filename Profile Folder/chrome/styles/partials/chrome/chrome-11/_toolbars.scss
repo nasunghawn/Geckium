@@ -11,15 +11,13 @@
 
 	--personal-toolbar-height: 24px;
 
-	&:not([personalbar="newtab"]) {
-		#PersonalToolbar {
-			padding: 1px !important;
-			padding-inline: 3px !important;
-			
-			> * {
-				margin-top: -2px !important;
-				margin-bottom: 2px !important;
-			}
+	&:not([personalbar="newtab"]) #PersonalToolbar {
+		padding: 1px !important;
+		padding-inline: 3px !important;
+		
+		> * {
+			margin-top: -2px !important;
+			margin-bottom: 2px !important;
 		}
 	}
 
@@ -200,7 +198,7 @@
 			}
 		}
 	}
-	&[gksystheme="gtk"]:not([gkthemed], [gkchrthemed], [geckium-fortyseven]) {
+	&[gksystheme="gtk"]:not([gkthemed], [gkchrthemed], [geckium-thirtyseven]) {
 		#PanelUI-menu-button,
 		#chrome-button {
 			width: 33px !important;

@@ -1,4 +1,5 @@
 $icon-data: (
+	menu: "menu",
 	edit: "edit",
 	chat: "chat",
 	click: "click",
@@ -25,13 +26,12 @@ $icon-data: (
 	public: "public",
 	data-object: "data-object",
 	account-circle: "account-circle",
-	save: "save"
+	save: "save",
+	delete: "delete"
 );
 
 @each $icon, $file in $icon-data {
-	.icon-#{$icon} {
-		&::before {
-			mask-image: url("chrome://userchrome/content/frameworks/GeckiumMaterial/icons/#{$file}.svg");
-		}
+	.icon-#{$icon}::before {
+		mask-image: url("chrome://userchrome/content/frameworks/GeckiumMaterial/icons/#{$file}.svg");
 	}
 }

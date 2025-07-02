@@ -14,6 +14,12 @@
 	// Custom theme support
 	// lwtheme
 	&[gkthemed]:not([gkchrthemed]) {
+		--thumbnail-border-color: color-mix(
+			in srgb,
+			var(--gktoolbar-bgcolor, var(--toolbar-bgcolor, var(--lwt-accent-color))) 31.37254901960784%,
+			transparent
+		);
+		--thumbnail-border-color-hot: var(--gktoolbar-bgcolor, var(--toolbar-bgcolor, var(--lwt-accent-color)));
 		--thumbnail-inner-border-color: color-mix(
 			in srgb,
 			var(--gktoolbar-bgcolor, var(--toolbar-bgcolor, var(--lwt-accent-color))) 50%,
@@ -28,6 +34,7 @@
 			var(--chrtheme-ntp-header, var(--default-thumbnail-border-color)) 31.37254901960784%,
 			transparent
 		);
+		--thumbnail-border-color-hot: var(--chrtheme-ntp-header, var(--default-thumbnail-border-color));
 		--thumbnail-inner-border-color: var(--chrtheme-ntp-background, var(--default-thumbnail-inner-border-color));
 		--thumbnail-wrapper-background-color-hot: var(--chrtheme-ntp-header, var(--default-thumbnail-border-color));
 	}
@@ -40,6 +47,7 @@
 	&[geckium-choice="twentyfive"] {
 		@media only screen and (max-width: 1113px) {
 			#most-visited-page  {
+				.tile-pos-grid,
 				.tile-grid {
 					gap: 26px;
 				}
@@ -60,6 +68,7 @@
 
 		@media only screen and (max-width: 1073px) {
 			#most-visited-page  {
+				.tile-pos-grid,
 				.tile-grid {
 					gap: 24px;
 				}
@@ -80,6 +89,7 @@
 
 		@media only screen and (max-width: 1031px) {
 			#most-visited-page  {
+				.tile-pos-grid,
 				.tile-grid {
 					gap: 23px;
 				}
@@ -98,8 +108,21 @@
 			}
 		}
 
+		@media only screen and (max-width: 1020px) {
+			#apps-page .tile-container {
+				width: 120px;
+				height: 120px;
+
+				.icon {
+					width: 96px;
+					height: 96px;
+				}
+			}
+		}
+
 		@media only screen and (max-width: 991px) {
 			#most-visited-page  {
+				.tile-pos-grid,
 				.tile-grid {
 					gap: 21px;
 				}
@@ -120,6 +143,7 @@
 
 		@media only screen and (max-width: 982px) {
 			#most-visited-page  {
+				.tile-pos-grid,
 				.tile-grid {
 					gap: 21px;
 				}
@@ -140,6 +164,7 @@
 
 		@media only screen and (max-width: 938px) {
 			#most-visited-page  {
+				.tile-pos-grid,
 				.tile-grid {
 					gap: 20px;
 				}
@@ -160,6 +185,7 @@
 
 		@media only screen and (max-width: 898px) {
 			#most-visited-page  {
+				.tile-pos-grid,
 				.tile-grid {
 					gap: 19px;
 				}
@@ -180,6 +206,7 @@
 
 		@media only screen and (max-width: 856px) {
 			#most-visited-page  {
+				.tile-pos-grid,
 				.tile-grid {
 					gap: 18px;
 				}
@@ -200,6 +227,7 @@
 
 		@media only screen and (max-width: 813px) {
 			#most-visited-page  {
+				.tile-pos-grid,
 				.tile-grid {
 					gap: 17px;
 				}
@@ -220,6 +248,7 @@
 
 		@media only screen and (max-width: 770px) {
 			#most-visited-page  {
+				.tile-pos-grid,
 				.tile-grid {
 					gap: 16px;
 				}
@@ -240,6 +269,7 @@
 
 		@media only screen and (max-width: 754px) {
 			#most-visited-page  {
+				.tile-pos-grid,
 				.tile-grid {
 					grid-template-columns: repeat(2, minmax(0, 1fr));
 					grid-template-rows: repeat(4, minmax(0, 1fr));
@@ -262,6 +292,7 @@
 
 		@media only screen and (max-width: 751px) {
 			#apps-page {
+				.tile-pos-grid,
 				.tile-grid {
 					grid-template-columns: repeat(3, minmax(0, 1fr));
 					grid-template-rows: repeat(3, minmax(0, 1fr));
@@ -284,19 +315,13 @@
 		}
 	}
 
-	&[pinineveryera="false"] {
-		.pin-button {
-			display: none !important;
-		}
+	&[pinineveryera="false"] .pin-button {
+		display: none !important;
 	}
 }
 
-#apps-page {
-	transition-property: grid-template-columns, grid-template-rows;
-	transition-duration: .15s;
-}
-
 #most-visited-page {
+	.tile-pos-grid,
 	.tile-grid {
 		gap: 26px;
 

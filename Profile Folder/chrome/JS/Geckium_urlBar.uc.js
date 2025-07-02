@@ -21,19 +21,19 @@ function changeGoButton() {
 		goButton.id = "go-button";
 		
 		goButtonBox.classList.add("toolbarbutton-1");
-		goButtonBox.setAttribute("onclick", "gURLBar.handleCommand(event);");
+		goButtonBox.addEventListener("click", (e) => gURLBar.handleCommand(e));
 		goButtonBox.appendChild(goButton);
 
 		if (appearanceChoice <= 5)
 			urlbarContainer.appendChild(goButtonBox);
-		else if (appearanceChoice == 47)
+		else if (appearanceChoice == 37 || appearanceChoice == 47)
 			urlbarInputContainer.appendChild(goButtonBox);
 	} else {
 		const goButtonBox = document.getElementById("go-button-box");
 
 		if (appearanceChoice <= 5)
 			urlbarContainer.appendChild(goButtonBox);
-		else if (appearanceChoice == 47)
+		else if (appearanceChoice == 37 || appearanceChoice == 47)
 			urlbarInputContainer.appendChild(goButtonBox);
 	}
 }
@@ -65,7 +65,7 @@ function styleURLBar() {
 		}
 	}, 10);
 
-	if (appearanceChoice <= 5 || appearanceChoice == 47)
+	if (appearanceChoice <= 5 || appearanceChoice == 37 || appearanceChoice == 47)
 		waitForElm("#page-action-buttons").then(changeGoButton)
 }
 window.addEventListener("load", styleURLBar);

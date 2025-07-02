@@ -7,7 +7,7 @@
 // ==/UserScript==
 
 const { gkUpdater } = ChromeUtils.importESModule("chrome://modules/content/GeckiumUpdater.sys.mjs");
-const configIteration = 5;
+const configIteration = 6;
 
 (async () => {
 	let ver = gkPrefUtils.tryGet("Geckium.version.current").string;
@@ -42,52 +42,43 @@ function updateSettings(iteration) {
 	if (iteration < 1) {
 		gkPrefUtils.set("toolkit.legacyUserProfileCustomizations.stylesheets").bool(true);		// Turn on legacy stylesheets
 
+		// Customise the existing toolbar
+		geckifyToolbar();
+
 		if (AppConstants.platform == "win") {
 			gkPrefUtils.set("widget.ev-native-controls-patch.override-win-version").int(7);		// Force aero
 			gkPrefUtils.set("gfx.webrender.dcomp-win.enabled").bool(false);						// Disable dcomp
 			gkPrefUtils.set("browser.display.windows.non_native_menus").int(0);
-			gkPrefUtils.set("browser.startup.blankWindow").bool(false);                         // Disable Firefox's splash screen
+			gkPrefUtils.set("browser.startup.blankWindow").bool(false);							// Disable Firefox's splash screen
 		}
 
-		gkPrefUtils.set("browser.tabs.tabmanager.enabled").bool(false);                         // Disable that context-inappropriate chevron
-		gkPrefUtils.set("browser.urlbar.showSearchTerms.enabled").bool(false);				    // Show URL after a search in URLbar
-		gkPrefUtils.set("browser.urlbar.trimURLs").bool(false);                                 // Show protocol in URL in URLbar
+		gkPrefUtils.set("browser.tabs.tabmanager.enabled").bool(false);							// Disable that context-inappropriate chevron
+		gkPrefUtils.set("browser.urlbar.showSearchTerms.enabled").bool(false);					// Show URL after a search in URLbar
+		gkPrefUtils.set("browser.urlbar.trimURLs").bool(false);									// Show protocol in URL in URLbar
 		gkPrefUtils.set("browser.newtab.preload").bool(false)									// Disable New Tab preload to prevent new data from not loading
 		gkPrefUtils.set("browser.theme.dark-private-windows").bool(false);						// Disable incognito dark mode
-		gkPrefUtils.set("widget.gtk.overlay-scrollbars.enabled").bool(false);                   // Disable GTK3's overlay scrollbars (Linux)
-		gkPrefUtils.set("widget.gtk.non-native-titlebar-buttons.enabled").bool(false);          // Disable non-native titlebar buttons in Light and Dark (Linux, 128+)
+		gkPrefUtils.set("widget.gtk.overlay-scrollbars.enabled").bool(false);					// Disable GTK3's overlay scrollbars (Linux)
+		gkPrefUtils.set("widget.gtk.non-native-titlebar-buttons.enabled").bool(false);			// Disable non-native titlebar buttons in Light and Dark (Linux, 128+)
 
 		if (!gkPrefUtils.tryGet("Geckium.newTabHome.appsList").string) {
-			gkPrefUtils.set("Geckium.newTabHome.appsList").string(`
-			{
-				"0": {
-					"pos": 0,
-					"favicon": "chrome://userchrome/content/pages/newTabHome/assets/chrome-11/imgs/IDR_PRODUCT_LOGO_16.png",
-					"oldIcon": "chrome://userchrome/content/pages/newTabHome/assets/chrome-21/imgs/1.png",
-					"newIcon": "chrome://userchrome/content/pages/newTabHome/assets/chrome-21/imgs/1.png",
-					"oldName": "Web Store",
-					"newName": "Web Store",
-					"url": "https://chromewebstore.google.com",
-					"type": 0
-				}
-			}
-			`);																			        // Add initial app if the apps list is empty
+			gkNTP.restoreDefaultApps();															// Add initial app if the apps list is empty
 		}
 	}
 	if (iteration < 2) {
-		gkPrefUtils.set("widget.non-native-theme.enabled").bool(false); // Allow native theme colours to be used in specific pages
+		gkPrefUtils.set("widget.non-native-theme.enabled").bool(false);							// Allow native theme colours to be used in specific pages
 	}
 	if (iteration < 3) {
-		gkPrefUtils.set("browser.tabs.hoverPreview.enabled").bool(false);   // Disable tab preview thumbnails
+		gkPrefUtils.set("browser.tabs.hoverPreview.enabled").bool(false);						// Disable tab preview thumbnails
 	}
 	if (iteration < 4) {
-		gkPrefUtils.set("userChromeJS.persistent_domcontent_callback").bool(true);  // Enable hack that allows Geckium to have the ability to inject itself in `about:` pages
+		gkPrefUtils.set("userChromeJS.persistent_domcontent_callback").bool(true);				// Enable hack that allows Geckium to have the ability to inject itself in `about:` pages
 	}
 	if (iteration < 5) {
-		CustomizableUI.removeWidgetFromArea("fxa-toolbar-menu-button");  // Remove the old avatar toolbarbutton
+		CustomizableUI.removeWidgetFromArea("fxa-toolbar-menu-button");							// Remove the old avatar toolbarbutton
 		if (gkPrefUtils.tryGet("Geckium.appearance.titlebarStyle").string == "winnogaps") {
-			gkPrefUtils.set("Geckium.appearance.titlebarStyle").string("win8nogaps");	// Transition "Windows (no gaps)" to "Windows 8 (no gaps)"
+			gkPrefUtils.set("Geckium.appearance.titlebarStyle").string("win8nogaps");			// Transition "Windows (no gaps)" to "Windows 8 (no gaps)"
 		}
+		
 		// pfpMode was changed from `int` to `string`.
 		try {
 			const pfpMode = parseInt(Services.prefs.getIntPref("Geckium.profilepic.mode"));
@@ -114,11 +105,59 @@ function updateSettings(iteration) {
 						own `geckium` mode.*/
 			gkPrefUtils.set("Geckium.customtheme.mode").string("geckium");
 		}
+
+		// Change this pref's name to be more inline with the rest of the `devOptions` settings.
+		gkPrefUtils.set("Geckium.devOptions.status").bool(gkPrefUtils.tryGet("Geckium.developerOptions.status").bool);
+		gkPrefUtils.delete("Geckium.developerOptions.status");
+	}
+	if (iteration < 6) {
+		// Backup old apps format and set appsList to the new defaults
+		gkPrefUtils.set("Geckium.newTabHome.oldAppsList").string(gkPrefUtils.tryGet("Geckium.newTabHome.appsList").string);
+		gkNTP.restoreDefaultApps();
 	}
 	// Put future settings changes down here as < 6, and so on.
 
 	if (iteration < configIteration)
 		gkPrefUtils.set("Geckium.version.iteration").int(configIteration);
+}
+
+// Modify existing toolbar layout to suit Geckium on first run
+function geckifyToolbar() {
+	var types = [
+		[CustomizableUI.AREA_TABSTRIP, ["tabbrowser-tabs", "new-tab-button", "alltabs-button"]],
+		[CustomizableUI.AREA_NAVBAR, ["back-button", "forward-button", "stop-reload-button", "home-button", "urlbar-container"]],
+		[CustomizableUI.AREA_BOOKMARKS, ["import-button", "personal-bookmarks"]]
+	]
+	var delet = ["firefox-view-button"]
+	var ignorer = ["gk-firefox-account-button", "unified-extensions-button", "gsettings-button", "page-button", "chrome-button", "fxms-bmb-button"]
+
+	// Move items that do not belong on the respective toolbars to the extensions area
+	types.forEach(function (type, index) {
+		for (const i of CustomizableUI.getWidgetIdsInArea(type[0])) {
+			if (i.startsWith("customizableui-special-spring") || delet.includes(i)) {
+				// Delete flexible spacers, and Firefox View's toolbarbutton, rather than moving them
+				CustomizableUI.removeWidgetFromArea(i);
+			} else if (!type[1].includes(i) && !ignorer.includes(i)) {
+				CustomizableUI.addWidgetToArea(i, CustomizableUI.AREA_NAVBAR, 99999);
+			}
+		}
+	});
+
+	// Move intended toolbar items to their in-Chromium locations
+	types.forEach(function (type, index) {
+		ii = 0
+		for (const i of type[1]) {
+			if (ignorer.includes(i)) {
+				i1 += 1;
+				continue; // Ignore this widget, but increment position for the other widgets
+			}
+			if (i == "home-button" && CustomizableUI.getPlacementOfWidget(i) == null) {
+				continue; // Avoid adding the home button if it's not currently added
+			}
+			CustomizableUI.addWidgetToArea(i, type[0], ii);
+			ii += 1;
+		}
+	});
 }
 
 // PLACEHOLDER UPDATE MECHANISM FOR GECKIUM PUBLIC BETA 1
